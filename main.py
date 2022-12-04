@@ -43,33 +43,38 @@ range_dates = pd.Series(pd.date_range(start=str(data["fecha_fallecimiento"].min(
 options = ["Tabla Principal", "Sexo", "Mapas","Edad"]
 
 with st.sidebar:
-    selected = option_menu("Muertos Por Covid Peru Segun: ", options, default_index=0)
+    selected = option_menu(" Fallecidos, hospitalizados y vacunosdos por COVID- 19 en el Perú  ", options, default_index=0)
 if selected == "Tabla Principal":
-    st.title("Tabala 50 primeros")
-    st.write("Tomando los campos mas relevantes")
+    st.title("Tabla de los 50 primeros fallecidos por COVID_19 en el Perú")
     st.table(data.head(50).fillna({"fabricante_dosis1":"No aplico dosis","fabricante_dosis2":"No aplico dosis","fabricante_dosis3":"No aplico dosis"}))
+    st.write("Esta tabla muestra los 50 primeros datos de la tabla del universo de fallecidos por COVID_19(en base al criterio del CDC) , vinculando información de aquellos que estuvieron hospitalizados (F500-SICOVID) y si han recibido dosis de vacunas covid.")
 elif selected == "Sexo":
-    st.header("Grafico de barras  de dobler entrada con Criterio de Sexo")
+    st.header("Grafico de barras superpuestas en funcion del Sexo")
     option = st.selectbox(
         label="Elija una opcion para filtrar", options=data.drop(["sexo","id_persona"], axis=1).columns)
     data2 = pd.concat([data.loc[data["sexo"] == 'M', [option]].value_counts(), data.loc[data["sexo"] == 'F', [option]].value_counts()], axis=1)
     index = pd.Index(data2.index.values)
-    data_by_sex = pd.DataFrame(data2.values, index=index, columns=["M", "F"])
+    data_by_sex = pd.DataFrame(data2.values, index=index, columns=["Masculino", "Femenino"])
     st.bar_chart(data_by_sex)
+    st.write("Grafico de barras superpuestas en funcion del sexo")
+    st.write("Los graficos estaran defenidos, por  el eje 'x'  que representa una de las variables opcionales (fecha_segumiento_hosp_ultimo,fecha_dosis3,ubigeo_cdc,dpt_cdc,prov_cdc,dist_cdc,cdc_positividad,flag_vacuna,eess_renaes,eess_diresa,eess_red,eess_nombre,evolucion_hosp_ultimo,fecha_dosis1,fecha_dosis2,fecha_ingreso_hosp,fecha_ingreso_uci,fecha_ingreso_ucin,ubigeo_inei_domicilio) y por el lado del  eje 'y' representa la variable la cantidad de fallecidos.\n ") 
 elif selected == "Mapas":
+    st.title("MAPA DISTRITAL Y PROVINCIAL SEGUN LA CANTIDAD DE FALLECIDOS POR COVID_19")
+    st.write("Las mapas tienen diferentes colores en funcion de la cantidad de fallecidos.")
+    st.write("Estos colores varian desde el color morado(menor cantidad de fallecidos) hasta el color amarillo(mayor cantidad de fallecidos).")
     st.pyplot(fig)
     option = st.selectbox(
-        label="Elija una region", options=map_data.NOMBPROV.value_counts().index.values)
+        label="Elija una provincia:", options=map_data.NOMBPROV.value_counts().index.values)
     ax = map_data[map_data.NOMBPROV == option].plot(figsize=(10, 10), column='fallecidos', legend=True)
     plt.ylabel('Latitude')
     plt.xlabel('Longitude')
     plt.title(f'Cant. fallecidos - {option.capitalize()} provincia')
     ax.axis('scaled')
-    st.pyplot(ax.figure, clear_figure=True)
+    st.pyplot(ax.figure, clear_figure=True)      
 elif selected == "Edad":
-    st.title("Registro de muertos por covid 19 segun Edad")
+    st.title("Registro de muertos por COVID_19  segun Edad")
     st.write("Variabilidad segun fechas registradas")
-    start_time = st.select_slider("Fecha de ultimo registros",options=range_dates.values,format_func=lambda op:datetime.utcfromtimestamp(op.astype(int) * 1e-9))
+    start_time = st.select_slider("Fecha de ultimo registros",options=range_dates.values)
     st.write("Start time:", start_time)
     data_filter =pd.DataFrame(data.loc[data["fecha_fallecimiento"]<start_time,["edad"]].value_counts()).reset_index()
     data_filter.columns = ["edad","cantidad"]
@@ -81,3 +86,4 @@ elif selected == "Edad":
             'y': {'field': 'cantidad', 'type': 'quantitative'},
         },
     })
+    st.write("Grafico de dispersion segun la cantidad de fallecidos respecto a la edad que se modifica por la Variabilidad de la fechas registradas")
